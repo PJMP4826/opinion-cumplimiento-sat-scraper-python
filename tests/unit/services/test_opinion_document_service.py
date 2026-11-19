@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+from datetime import date
 
 import httpx
 import pytest
@@ -13,6 +14,7 @@ from opinion_scraper.exceptions import (
     OpinionNotAvailableException,
 )
 from opinion_scraper.services import OpinionDocumentService
+from opinion_scraper.value_objects import Rfc
 
 RFC = "PJMP482601AB1"
 PDF_BYTES = b"%PDF-1.4 opinion"
@@ -55,7 +57,16 @@ async def test_download_uses_default_filename() -> None:
         finally:
             await client.aclose()
 
-    assert pdf.filename == f"opinion_cumplimiento_{RFC}.pdf"
+    stamp = date.today().strftime("%Y_%m_%d")
+    assert pdf.filename == f"opinion_cumplimiento_{RFC}_{stamp}.pdf"
+
+
+def test_safe_filename_uses_injected_date() -> None:
+    filename = OpinionDocumentService._safe_filename(
+        None, Rfc(RFC), today=date(2026, 11, 19)
+    )
+
+    assert filename == f"opinion_cumplimiento_{RFC}_2026_11_19.pdf"
 
 
 async def test_download_sanitizes_filename_and_whitespace() -> None:
