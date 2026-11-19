@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from .config import DEFAULT_32D, PortalConfig
 from .exceptions import (
     AuthenticationException,
@@ -17,6 +19,9 @@ from .exceptions import (
     SatNetworkException,
 )
 from .value_objects import AuthResult, FielCredentials, OpinionPdf, Rfc
+
+if TYPE_CHECKING:
+    from .downloader import OpinionDownloader
 
 __version__ = "0.1.0"
 
@@ -43,7 +48,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str) -> object:
+def __getattr__(name: str) -> Any:
     if name == "OpinionDownloader":
         from importlib import import_module
 
