@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+from datetime import date
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -71,12 +72,13 @@ class OpinionDocumentService:
         return OpinionPdf(content=content, filename=filename)
 
     @staticmethod
-    def _safe_filename(raw: object, rfc: Rfc) -> str:
+    def _safe_filename(raw: object, rfc: Rfc, *, today: date | None = None) -> str:
         if isinstance(raw, str) and raw:
             name = Path(raw.replace("\\", "/")).name
             if name:
                 return name
-        return f"opinion_cumplimiento_{rfc}.pdf"
+        stamp = (today or date.today()).strftime("%Y_%m_%d")
+        return f"opinion_cumplimiento_{rfc}_{stamp}.pdf"
 
     @staticmethod
     def _parse_json(response: httpx.Response) -> dict[str, Any]:
