@@ -43,7 +43,8 @@ class OidcFederationHandler:
                 referer=str(response.url),
             )
             response = await self._follow_js_redirect(client, response)
-        if extract_form(response.text, base_url=str(response.url)) is None:
+        form = extract_form(response.text, base_url=str(response.url))
+        if form is None or not _is_federation_form(form):
             return response
         raise FederationException(
             "La federacion no termino dentro del limite de formularios permitido."

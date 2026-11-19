@@ -72,6 +72,6 @@ class NidpCertFormLogin:
         return await post_form(client, action, fields, referer=str(response.url))
 
     def _rewrite_login_id(self, action: str) -> str:
-        if "nidp/app/login" not in action:
+        if "app/login" not in action or _LOGIN_ID_PATTERN.search(action) is None:
             return action
         return _LOGIN_ID_PATTERN.sub(rf"\1id={self._login_id}", action, count=1)

@@ -70,6 +70,20 @@ async def test_login_rewrites_id_and_signs_certform() -> None:
     assert "token" in certform_body
 
 
+def test_rewrite_login_id_handles_double_slash() -> None:
+    signer = Signer.load(build_fiel().credentials())
+    login = NidpCertFormLogin(signer)
+
+    assert (
+        login._rewrite_login_id("https://loginda.sat.gob.mx/nidp//app/login?id=ciec&sid=0")
+        == "https://loginda.sat.gob.mx/nidp//app/login?id=fiel&sid=0"
+    )
+    assert (
+        login._rewrite_login_id("https://loginda.sat.gob.mx/otro/login?id=ciec")
+        == "https://loginda.sat.gob.mx/otro/login?id=ciec"
+    )
+
+
 async def test_login_fails_without_certform() -> None:
     signer = Signer.load(build_fiel().credentials())
 
