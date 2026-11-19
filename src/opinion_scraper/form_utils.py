@@ -50,15 +50,24 @@ def extract_form(
     form_id: str | None = None,
     index: int = 0,
     base_url: str | None = None,
+    action_contains: str | None = None,
 ) -> FormExtractionResult | None:
-    """Devuelve el primer formulario (o el de `form_id`) con sus campos."""
+    """Devuelve el formulario solicitado con todos sus campos."""
     soup = BeautifulSoup(html, "lxml")
+    form: Tag | None
     if form_id is not None:
         form = soup.find("form", id=form_id)
+    elif action_contains is not None:
+        form = None
+        for candidate in soup.find_all("form"):
+            raw_action = candidate.get("action")
+            if isinstance(raw_action, str) and action_contains in raw_action:
+                form = candidate
+                break
     else:
         forms = soup.find_all("form")
         form = forms[index] if len(forms) > index else None
-    if not isinstance(form, Tag):
+    if form is None:
         return None
 
     raw_action = form.get("action")

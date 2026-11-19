@@ -7,8 +7,20 @@ from urllib.parse import urljoin
 import httpx
 
 from ...exceptions.auth import FederationException
-from ...form_utils import extract_form, extract_js_redirect
+from ...form_utils import FormExtractionResult, extract_form, extract_js_redirect
 from ...services._portal import get_url, post_form
+
+_FEDERATION_FIELDS = frozenset(
+    {"SAMLResponse", "SAMLRequest", "RelayState", "code", "state", "id_token", "access_token"}
+)
+_FEDERATION_ACTION_HINTS = ("/saml", "/oauth", "/callback", "/acs", "/sso")
+
+
+def _is_federation_form(form: FormExtractionResult) -> bool:
+    if _FEDERATION_FIELDS.intersection(form.fields):
+        return True
+    action = (form.action or "").lower()
+    return any(hint in action for hint in _FEDERATION_ACTION_HINTS)
 
 
 class OidcFederationHandler:
@@ -21,7 +33,7 @@ class OidcFederationHandler:
         response = await self._follow_js_redirect(client, response)
         for _ in range(self._max_forms):
             form = extract_form(response.text, base_url=str(response.url))
-            if form is None:
+            if form is None or not _is_federation_form(form):
                 return response
             action = form.action or str(response.url)
             response = await post_form(
@@ -31,6 +43,8 @@ class OidcFederationHandler:
                 referer=str(response.url),
             )
             response = await self._follow_js_redirect(client, response)
+        if extract_form(response.text, base_url=str(response.url)) is None:
+            return response
         raise FederationException(
             "La federacion no termino dentro del limite de formularios permitido."
         )

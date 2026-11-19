@@ -43,3 +43,27 @@ async def test_follows_js_redirect_and_form_post() -> None:
 
     assert response.text == PORTAL_READY_HTML
     assert len(callback_post.calls) == 1
+
+
+async def test_does_not_post_non_federation_form() -> None:
+    html = """
+    <html><body>
+    <form method="post" action="https://ptsc32d.clouda.sat.gob.mx/reporte">
+      <input type="text" name="busqueda" value="x">
+    </form>
+    </body></html>
+    """
+    initial = httpx.Response(
+        200,
+        text=html,
+        request=httpx.Request("GET", "https://ptsc32d.clouda.sat.gob.mx/"),
+    )
+
+    with respx.mock:
+        client = httpx.AsyncClient(follow_redirects=True)
+        try:
+            response = await OidcFederationHandler().follow(client, initial)
+        finally:
+            await client.aclose()
+
+    assert response.text == html

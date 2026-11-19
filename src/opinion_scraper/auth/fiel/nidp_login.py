@@ -40,7 +40,11 @@ class NidpCertFormLogin:
                 raise SatLoginException(
                     "No se encontro el formulario certform de la FIEL en el portal."
                 )
-            form = extract_form(response.text, base_url=str(response.url))
+            form = extract_form(
+                response.text,
+                base_url=str(response.url),
+                action_contains="app/login",
+            )
             if form is None:
                 raise SatLoginException("No se encontro un formulario de login en el portal.")
             action = self._rewrite_login_id(form.action or str(response.url))

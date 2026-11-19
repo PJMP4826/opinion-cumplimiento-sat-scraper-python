@@ -51,6 +51,19 @@ def test_extract_form_missing() -> None:
     assert extract_form(FORM_HTML, form_id="noexiste") is None
 
 
+def test_extract_form_by_action() -> None:
+    html = """
+    <form action="/buscador"><input name="q" value="x"></form>
+    <form action="/nidp/app/login?id=ciec"><input name="guid" value="g"></form>
+    """
+    form = extract_form(html, action_contains="app/login", base_url="https://sat.gob.mx")
+
+    assert form is not None
+    assert form.action == "https://sat.gob.mx/nidp/app/login?id=ciec"
+    assert form.fields == {"guid": "g"}
+    assert extract_form(html, action_contains="noexiste") is None
+
+
 def test_extract_js_redirect_unescapes() -> None:
     assert extract_js_redirect(FORM_HTML) == "https://sat.gob.mx/cb?a=1&b=2"
     assert extract_js_redirect("<html></html>") is None
