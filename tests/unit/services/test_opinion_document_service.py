@@ -58,6 +58,24 @@ async def test_download_uses_default_filename() -> None:
     assert pdf.filename == f"opinion_cumplimiento_{RFC}.pdf"
 
 
+async def test_download_sanitizes_filename_and_whitespace() -> None:
+    encoded = base64.b64encode(PDF_BYTES).decode()
+    payload = {
+        "ContenidoBase64": f"  {encoded[:10]}\n{encoded[10:]}  ",
+        "NombreArchivo": "../../etc/opinion.pdf",
+    }
+    with respx.mock:
+        respx.post(DEFAULT_32D.pdf_endpoint).mock(return_value=_json_response(payload))
+        client = httpx.AsyncClient()
+        try:
+            pdf = await OpinionDocumentService(DEFAULT_32D).download(client, RFC)
+        finally:
+            await client.aclose()
+
+    assert pdf.content == PDF_BYTES
+    assert pdf.filename == "opinion.pdf"
+
+
 async def test_download_raises_when_sat_rejects() -> None:
     payload = {
         "Respuesta": {"Exito": False, "Codigo": "32D-01", "Mensaje": "Sin obligaciones"},

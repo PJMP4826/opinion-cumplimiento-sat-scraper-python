@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -66,10 +67,16 @@ class OpinionDocumentService:
         data = self._parse_json(response)
         self._validate_status(data)
         content = self._decode_content(data)
-        filename = data.get("NombreArchivo")
-        if not isinstance(filename, str) or not filename:
-            filename = f"opinion_cumplimiento_{validated_rfc}.pdf"
+        filename = self._safe_filename(data.get("NombreArchivo"), validated_rfc)
         return OpinionPdf(content=content, filename=filename)
+
+    @staticmethod
+    def _safe_filename(raw: object, rfc: Rfc) -> str:
+        if isinstance(raw, str) and raw:
+            name = Path(raw.replace("\\", "/")).name
+            if name:
+                return name
+        return f"opinion_cumplimiento_{rfc}.pdf"
 
     @staticmethod
     def _parse_json(response: httpx.Response) -> dict[str, Any]:
@@ -110,8 +117,9 @@ class OpinionDocumentService:
             raise InvalidOpinionResponseException(
                 "La respuesta del portal 32-D no contiene ContenidoBase64."
             )
+        compact = "".join(encoded.split())
         try:
-            return base64.b64decode(encoded, validate=True)
+            return base64.b64decode(compact, validate=True)
         except (binascii.Error, ValueError) as exc:
             raise InvalidOpinionResponseException(
                 "El contenido del PDF no es base64 valido."
