@@ -58,8 +58,11 @@ from opinion_scraper import FielCredentials, OpinionDownloader
 
 credentials = FielCredentials.from_files("certificado.cer", "llave.key", "mi-contrasena")
 downloader = OpinionDownloader.create(credentials=credentials)
-pdf = downloader.download_sync()
-pdf.save("opinion.pdf")
+try:
+    pdf = downloader.download_sync()
+    pdf.save("opinion.pdf")
+finally:
+    downloader.close_sync()
 ```
 
 `download()` usa el RFC del certificado. También acepta un RFC explícito, que

@@ -94,6 +94,9 @@ class OpinionDownloader:
     def download_sync(self, rfc: str | None = None) -> OpinionPdf:
         return asyncio.run(self.download(rfc))
 
+    def close_sync(self) -> None:
+        asyncio.run(self.aclose())
+
     async def aclose(self) -> None:
         if self._owns_client:
             await self._client.aclose()
