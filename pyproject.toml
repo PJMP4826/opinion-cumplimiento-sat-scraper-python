@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "opinion-cumplimiento-sat-scraper-python"
-version = "0.1.0"
+version = "0.1.1"
 description = "Descarga de la Opinion de Cumplimiento del SAT (32-D) usando e.firma / FIEL."
 readme = "README.md"
 requires-python = ">=3.11"
