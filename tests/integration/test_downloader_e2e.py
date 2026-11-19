@@ -108,6 +108,44 @@ async def test_downloader_end_to_end_with_fiel() -> None:
     assert payload["canal"] == "G"
 
 
+def test_downloader_end_to_end_sync() -> None:
+    fixture = build_fiel()
+    pdf_payload = {
+        "Respuesta": {"Exito": True},
+        "ContenidoBase64": base64.b64encode(PDF_BYTES).decode(),
+        "NombreArchivo": "opinion.pdf",
+    }
+
+    with respx.mock:
+        respx.get(url__startswith="https://ptsc32d.clouda.sat.gob.mx/?/reporte").mock(
+            side_effect=[
+                httpx.Response(200, text=BOOTSTRAP_HTML),
+                httpx.Response(200, text=PORTAL_READY_HTML),
+            ]
+        )
+        respx.post(url__startswith="https://loginda.sat.gob.mx/nidp/app/login").mock(
+            side_effect=[
+                httpx.Response(200, text=CERTFORM_HTML),
+                httpx.Response(200, text=JS_REDIRECT_HTML),
+            ]
+        )
+        respx.get(url__startswith="https://ptsc32d.clouda.sat.gob.mx/oauth2/callback").mock(
+            return_value=httpx.Response(200, text=CALLBACK_FORM_HTML)
+        )
+        respx.post(url__startswith="https://ptsc32d.clouda.sat.gob.mx/oauth2/callback").mock(
+            return_value=httpx.Response(200, text=PORTAL_READY_HTML)
+        )
+        respx.post(DEFAULT_32D.pdf_endpoint).mock(
+            return_value=httpx.Response(200, json=pdf_payload)
+        )
+
+        downloader = OpinionDownloader.create(credentials=fixture.credentials())
+        pdf = downloader.download_sync()
+
+    assert pdf.content == PDF_BYTES
+    assert pdf.filename == "opinion.pdf"
+
+
 async def test_downloader_rejects_rfc_mismatch() -> None:
     client = httpx.AsyncClient()
     downloader = OpinionDownloader.create(

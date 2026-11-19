@@ -58,12 +58,12 @@ from opinion_scraper import FielCredentials, OpinionDownloader
 
 credentials = FielCredentials.from_files("certificado.cer", "llave.key", "mi-contrasena")
 downloader = OpinionDownloader.create(credentials=credentials)
-try:
-    pdf = downloader.download_sync()
-    pdf.save("opinion.pdf")
-finally:
-    downloader.close_sync()
+pdf = downloader.download_sync()
+pdf.save("opinion.pdf")
 ```
+
+`download_sync()` cierra el cliente HTTP que haya creado la librería. Si inyectas
+tu propio `httpx.AsyncClient`, tú eres responsable de cerrarlo.
 
 `download()` usa el RFC del certificado. También acepta un RFC explícito, que
 debe coincidir con el certificado:

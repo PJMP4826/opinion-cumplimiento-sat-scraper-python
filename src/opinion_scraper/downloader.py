@@ -35,6 +35,7 @@ class OpinionDownloader:
         self._portal = portal
         self._document_service = document_service or OpinionDocumentService(portal)
         self._owns_client = owns_client
+        self._closed = False
 
     @classmethod
     def create(
@@ -92,12 +93,21 @@ class OpinionDownloader:
             self._client.cookies.clear()
 
     def download_sync(self, rfc: str | None = None) -> OpinionPdf:
-        return asyncio.run(self.download(rfc))
+        async def run() -> OpinionPdf:
+            try:
+                return await self.download(rfc)
+            finally:
+                await self.aclose()
+
+        return asyncio.run(run())
 
     def close_sync(self) -> None:
         asyncio.run(self.aclose())
 
     async def aclose(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
         if self._owns_client:
             await self._client.aclose()
 
