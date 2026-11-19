@@ -45,7 +45,8 @@ __all__ = [
 
 def __getattr__(name: str) -> object:
     if name == "OpinionDownloader":
-        from .downloader import OpinionDownloader
+        from importlib import import_module
 
-        return OpinionDownloader
+        module = import_module(".downloader", __name__)
+        return module.OpinionDownloader
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
