@@ -68,6 +68,7 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 markers = [
     "live: pruebas que contactan al SAT real (requieren credenciales y red)",
 ]
